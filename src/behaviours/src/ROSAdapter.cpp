@@ -60,7 +60,7 @@ private:
 
 
 // Random number generator
-random_numbers::RandomNumberGenerator* rng;
+//random_numbers::RandomNumberGenerator* rng;
 
 // Create logic controller
 
@@ -132,7 +132,7 @@ ros::Publisher heartbeatPublisher;		//publishes ROSAdapters status via its "hear
 // Publishes swarmie_msgs::Waypoint messages on "/<robot>/waypooints"
 // to indicate when waypoints have been reached.
 ros::Publisher waypointFeedbackPublisher;	//publishes a waypoint to travel to if the rover is given a waypoint in manual mode
-
+ros::Publisher ClusterPublish;
 // Subscribers
 ros::Subscriber joySubscriber;			//receives joystick information
 ros::Subscriber modeSubscriber; 		//receives mode from GUI
@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
   driveControlPublish = mNH.advertise<geometry_msgs::Twist>((publishedName + "/driveControl"), 10);			//publishes motor commands to the motors
   heartbeatPublisher = mNH.advertise<std_msgs::String>((publishedName + "/behaviour/heartbeat"), 1, true);		//publishes ROSAdapters status via its "heartbeat"
   waypointFeedbackPublisher = mNH.advertise<swarmie_msgs::Waypoint>((publishedName + "/waypoints"), 1, true);		//publishes a waypoint to travel to if the rover is given a waypoint in manual mode
-
+  ClusterPublish = mNH.advertise<std::String>((publishedName + "/waypoints"),1,true);
   //timers
   publish_status_timer = mNH.createTimer(ros::Duration(status_publish_interval), publishStatusTimerEventHandler);
   stateMachineTimer = mNH.createTimer(ros::Duration(behaviourLoopTimeStep), behaviourStateMachine);
@@ -279,11 +279,13 @@ void behaviourStateMachine(const ros::TimerEvent&)
 
       // initialization has run
       initilized = true;
-      //TODO: this just sets center to 0 over and over and needs to change
+      //edited centerOdom
       Point centerOdom;
-      centerOdom.x = 1.3 * cos(currentLocation.theta);
-      centerOdom.y = 1.3 * sin(currentLocation.theta);
-      centerOdom.theta = centerLocation.theta;
+
+
+      centerOdom.x = 1.3 * cos(currentLocation.theta+ M_PI );
+      centerOdom.y = 1.3 * sin(currentLocation.theta+M_PI);
+      centerOdom.theta = centerLocation.theta + M_PI_2;
       logicController.SetCenterLocationOdom(centerOdom);
       
       Point centerMap;
@@ -467,7 +469,17 @@ void targetHandler(const apriltags_ros::AprilTagDetectionArray::ConstPtr& messag
     
     logicController.SetAprilTags(tags);
   }
-  
+
+   // cluster tags notification 
+  int Tags = message->detections();
+   if ( Tags > 5){
+       geometry_msgs::Pose2D msg;
+       msg.x = currentLocation.x;
+       msg.y = currentLocation.y;
+       msg.theta = currentLocation.theta;
+       ClusterPublish.publish(msg);
+       }
+
 }
 
 void modeHandler(const std_msgs::UInt8::ConstPtr& message) {
@@ -611,7 +623,7 @@ void joyCmdHandler(const sensor_msgs::Joy::ConstPtr& message) {
 
 void publishStatusTimerEventHandler(const ros::TimerEvent&) {
   std_msgs::String msg;
-  msg.data = "online";		//change this with team name
+  msg.data = "JSU online";		//JSU online 
   status_publisher.publish(msg);
 }
 

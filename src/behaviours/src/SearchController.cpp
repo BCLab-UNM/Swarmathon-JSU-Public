@@ -1,8 +1,12 @@
 #include "SearchController.h"
 #include <angles/angles.h>
 
+static int value =1;
+static int control=1;
+int position = value *1;
+
 SearchController::SearchController() {
-  rng = new random_numbers::RandomNumberGenerator();
+ // rng = new random_numbers::RandomNumberGenerator();
   currentLocation.x = 0;
   currentLocation.y = 0;
   currentLocation.theta = 0;
@@ -57,15 +61,23 @@ Result SearchController::DoWork() {
     }
     else
     {
-      //select new heading from Gaussian distribution around current heading
-      searchLocation.theta = rng->gaussian(currentLocation.theta, 0.785398); //45 degrees in radians
-      searchLocation.x = currentLocation.x + (0.5 * cos(searchLocation.theta));
-      searchLocation.y = currentLocation.y + (0.5 * sin(searchLocation.theta));
+      
+     // added search path 
+      searchLocation.theta = searchLocation.theta + M_PI_2;
+      searchLocation.x = currentLocation.x + (position * cos(searchLocation.theta));
+      searchLocation.y = currentLocation.y + (position * sin(searchLocation.theta));
     }
 
     result.wpts.waypoints.clear();
     result.wpts.waypoints.insert(result.wpts.waypoints.begin(), searchLocation);
-    
+    if ( control == 1)
+    {
+    value = value + 1;
+    } 
+   if ( control % 2 == 0 && control !=2){
+    value = value + 1;
+     }
+    control++;
     return result;
   }
 
