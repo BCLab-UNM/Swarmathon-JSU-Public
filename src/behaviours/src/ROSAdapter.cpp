@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
   driveControlPublish = mNH.advertise<geometry_msgs::Twist>((publishedName + "/driveControl"), 10);			//publishes motor commands to the motors
   heartbeatPublisher = mNH.advertise<std_msgs::String>((publishedName + "/behaviour/heartbeat"), 1, true);		//publishes ROSAdapters status via its "heartbeat"
   waypointFeedbackPublisher = mNH.advertise<swarmie_msgs::Waypoint>((publishedName + "/waypoints"), 1, true);		//publishes a waypoint to travel to if the rover is given a waypoint in manual mode
-  ClusterPublish = mNH.advertise<std::String>((publishedName + "/waypoints"),1,true);
+  ClusterPublish = mNH.advertise<geometry_msgs::Pose2D>((publishedName + "/cluster"),1,true);
   //timers
   publish_status_timer = mNH.createTimer(ros::Duration(status_publish_interval), publishStatusTimerEventHandler);
   stateMachineTimer = mNH.createTimer(ros::Duration(behaviourLoopTimeStep), behaviourStateMachine);
@@ -471,7 +471,7 @@ void targetHandler(const apriltags_ros::AprilTagDetectionArray::ConstPtr& messag
   }
 
    // cluster tags notification 
-  int Tags = message->detections();
+  int Tags = message->detections.size();
    if ( Tags > 5){
        geometry_msgs::Pose2D msg;
        msg.x = currentLocation.x;
